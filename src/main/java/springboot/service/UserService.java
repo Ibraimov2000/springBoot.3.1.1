@@ -1,22 +1,24 @@
 package springboot.service;
 
-import org.springframework.security.core.userdetails.UserDetailsService;
+
 import springboot.model.User;
 
 import java.util.List;
 
-public interface UserService extends UserDetailsService {
-    void addUser(User user);
+public interface UserService {
+
+    void deleteUser(long id);
 
     void updateUser(User user);
 
-    void deleteUserById(int id);
-
-    User getUserById(int id);
+    void createUser(User user);
 
     List<User> getUsers();
 
+    User getUserById(long id);
+
     User getUserByName(String name);
 
+    boolean isPasswordChanged (String password, String newPassword);
 
 }

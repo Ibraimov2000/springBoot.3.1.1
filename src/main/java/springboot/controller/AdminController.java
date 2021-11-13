@@ -1,77 +1,80 @@
 package springboot.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import springboot.model.Role;
 import springboot.model.User;
 import springboot.service.RoleService;
 import springboot.service.UserService;
 
-import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
     private final UserService userService;
     private final RoleService roleService;
 
-    @Autowired
     public AdminController(UserService userService, RoleService roleService) {
         this.userService = userService;
         this.roleService = roleService;
     }
 
-
-    @GetMapping()
-    public String printUsers(Model model) {
-        model.addAttribute("user", userService.getUsers());
-        return "/admin";
+    @GetMapping("/")
+    public String showAll(Model model) {
+        model.addAttribute("users", userService.getUsers());
+        return "admin/users";
     }
 
-    @GetMapping("/add")
-    public String addUserFrom(Model model) {
-        model.addAttribute("user", new User());
-        model.addAttribute("role", roleService.getAllRoles());
-        return "/add";
+    @GetMapping("/{id}")
+    public String showUser(@PathVariable("id") long id, Model model) {
+        model.addAttribute("user", userService.getUserById(id));
+        return "admin/user";
     }
 
-    @PostMapping()
-    public String addUser(@ModelAttribute("user") @Valid User user, BindingResult bindingResult,
-                          @RequestParam("role") ArrayList<Integer> role) {
-        if (bindingResult.hasErrors()) {
-            return "/add";
-        }
-        user.setRoles(role.stream().map((r) -> roleService.getByIdRole(r)).collect(Collectors.toSet()));
-        userService.addUser(user);
-        return "redirect:/admin";
+    @GetMapping("/new")
+    public String addUser(@ModelAttribute("user") User user) {
+        return "admin/new";
     }
 
-
-    @DeleteMapping("/{id}")
-    public String deleteUser(@PathVariable("id") int id) {
-        userService.deleteUserById(id);
-        return "redirect:/admin";
+    @PostMapping("/")
+    public String create(@ModelAttribute("user") User user) {
+        userService.createUser(user);
+        return "redirect:/admin/";
     }
 
     @GetMapping("/{id}/edit")
-    public String editUser(@PathVariable("id") int id, Model model) {
+    public String editUser(@PathVariable("id") long id, Model model) {
+        model.addAttribute("roles", roleService.getRoles());
         model.addAttribute("user", userService.getUserById(id));
-        return "/edit";
+        return "admin/edit";
     }
 
     @PostMapping("/{id}")
-    public String update(@ModelAttribute("user") @Valid User user, BindingResult bindingResult,
-                         @RequestParam("role") ArrayList<Integer> role) {
-        if (bindingResult.hasErrors()) {
-            return "/edit";
+    public String updateUser(
+            @ModelAttribute("user") User user,
+            @RequestParam("roles") long[] roleId
+    ) {
+        Set<Role> roleSet = new HashSet<>();
+        for (long id : roleId) {
+            Role role = roleService.getRoleById(id);
+            roleSet.add(role);
         }
-        user.setRoles(role.stream().map((r) -> roleService.getByIdRole(r)).collect(Collectors.toSet()));
-        userService.updateUser(user);
+        user.setRoles(roleSet);
+        if (userService.isPasswordChanged(userService.getUserById(user.getId()).getPassword(), user.getPassword())) {
+            userService.createUser(user);
+        } else {
+            userService.updateUser(user);
+        }
+        return "redirect:/admin/";
+    }
 
-        return "redirect:/admin";
+    @DeleteMapping("/{id}")
+    public String deleteUser(@PathVariable("id") long id) {
+        userService.deleteUser(id);
+        return "redirect:/admin/";
     }
 }

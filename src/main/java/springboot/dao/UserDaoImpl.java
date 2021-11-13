@@ -1,23 +1,27 @@
 package springboot.dao;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 import springboot.model.User;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import java.util.List;
 
 @Repository
-public class UserDaoImpl implements UserDao {
+public class UserDaoImpl implements UserDao{
+
+    BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public UserDaoImpl() {
+    }
 
     @PersistenceContext
     private EntityManager entityManager;
 
-
     @Override
-    public void addUser(User user) {
-        entityManager.persist(user);
+    public void deleteUser(long id) {
+        entityManager.remove(getUserById(id));
     }
 
     @Override
@@ -26,25 +30,23 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public void deleteUserById(int id) {
-        entityManager.remove(getUserById(id));
-    }
-
-    @Override
-    public User getUserById(int id) {
-        return entityManager.find(User.class, id);
-    }
-
-    @Override
     public List<User> getUsers() {
-        return entityManager.createQuery("select distinct u FROM User u LEFT JOIN FETCH u.roles", User.class).getResultList();
+        return entityManager.createQuery("from User", User.class).getResultList();
+    }
+
+    @Override
+    public User getUserById(long id) {
+        User user = entityManager.createQuery("SELECT u FROM User u where u.id = :id", User.class)
+                .setParameter("id", id)
+                .getSingleResult();
+        return user;
     }
 
     @Override
     public User getUserByName(String name) {
-        Query query = entityManager.createQuery("select distinct u from User u LEFT JOIN FETCH u.roles where u.name =: name");
-        query.setParameter("name", name);
-        User user = (User) query.getSingleResult();
-        return entityManager.find(User.class, user.getId());
+        User user = entityManager.createQuery("SELECT u FROM User u where u.name = :name", User.class)
+                .setParameter("name", name)
+                .getSingleResult();
+        return user;
     }
 }

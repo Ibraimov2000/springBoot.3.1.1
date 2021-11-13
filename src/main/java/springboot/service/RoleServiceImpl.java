@@ -9,23 +9,34 @@ import springboot.model.Role;
 import java.util.List;
 
 @Service
+@Transactional
 public class RoleServiceImpl implements RoleService {
-    private final RoleDao roleDao;
 
     @Autowired
-    public RoleServiceImpl(RoleDao roleDao) {
-        this.roleDao = roleDao;
+    private RoleDao roleDao;
+
+    @Override
+    public void addRole(Role role) {
+        roleDao.addRole(role);
     }
 
     @Override
-    @Transactional
-    public List<Role> getAllRoles() {
-        return roleDao.getAllRoles();
+    public void deleteRole(long id) {
+        roleDao.deleteRole(id);
     }
 
     @Override
-    @Transactional
-    public Role getByIdRole(int id) {
-        return roleDao.getByIdRole(id);
+    public List<Role> getRoles() {
+        return roleDao.getRoles();
+    }
+
+    @Override
+    public Role getRoleById(long id) {
+        return roleDao.getRoleById(id);
+    }
+
+    @Override
+    public Role getRoleByName(String rolename) {
+        return roleDao.getRoleByName(rolename);
     }
 }

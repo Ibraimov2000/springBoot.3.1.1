@@ -1,22 +1,18 @@
 package springboot.dao;
 
-
-
 import springboot.model.User;
 
 import java.util.List;
 
 public interface UserDao {
 
-    void addUser(User user);
+    void deleteUser(long id);
 
     void updateUser(User user);
 
-    void deleteUserById(int id);
-
-    User getUserById(int id);
-
     List<User> getUsers();
+
+    User getUserById(long id);
 
     User getUserByName(String name);
 }
